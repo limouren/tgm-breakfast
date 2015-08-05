@@ -108,5 +108,5 @@ func main() {
 
 	http.Handle("/"+token, http.HandlerFunc(server.HandleToday))
 	log.Println("Listening on", token)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":80", nil))
 }
