@@ -101,6 +101,7 @@ func Root(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	port := mustGetEnv("PORT")
 	token := mustGetEnv("TGMBK_TOKEN")
 	locations := mustGetLocations("TGMBK_LOCATIONS")
 
@@ -114,5 +115,5 @@ func main() {
 	http.Handle("/", http.HandlerFunc(Root))
 	http.Handle("/"+token, http.HandlerFunc(server.HandleToday))
 	log.Println("Listening on", token)
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
