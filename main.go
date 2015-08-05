@@ -88,7 +88,7 @@ func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.PostForm(fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", s.Token), form)
 	if err != nil {
 		log.Panicf("Failed to sendMessage: %v", err)
-	} else if resp.StatusCode<<2 != 2 {
+	} else if resp.StatusCode < 200 && resp.StatusCode > 299 {
 		body, _ := ioutil.ReadAll(resp.Body)
 		log.Panicf("got status code = %v\nBody = %v", resp.StatusCode, string(body))
 	}
