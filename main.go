@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -95,6 +96,10 @@ func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func Root(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "Hello World :)")
+}
+
 func main() {
 	token := mustGetEnv("TGMBK_TOKEN")
 	locations := mustGetLocations("TGMBK_LOCATIONS")
@@ -106,6 +111,7 @@ func main() {
 
 	server := Server{token, locations, loc}
 
+	http.Handle("/", http.HandlerFunc(Root))
 	http.Handle("/"+token, http.HandlerFunc(server.HandleToday))
 	log.Println("Listening on", token)
 	log.Fatal(http.ListenAndServe(":80", nil))
