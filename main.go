@@ -47,6 +47,7 @@ type Update struct {
 type Message struct {
 	ID   int           `json:"message_id"`
 	Chat UserGroupChat `json:"chat"`
+	Text string        `json:"text"`
 }
 
 // UserGroupChat is either a User or GroupChat object
@@ -69,15 +70,7 @@ func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
 		log.Panicf("Failed to unmarshal update: %v", err)
 	}
 
-	weekday := time.Now().In(s.Loc).Weekday()
-	index := indexFromMon(weekday)
-
-	var message string
-	if index < 6 {
-		message = s.Locations[index]
-	} else {
-		message = "No breakfast today :("
-	}
+	message := s.deriveMessage(update)
 
 	form := url.Values{}
 	form.Set("chat_id", strconv.Itoa(update.Message.Chat.ID))
@@ -94,6 +87,29 @@ func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) deriveMessage(update Update) string {
+	weekday := time.Now().In(s.Loc).Weekday()
+	index := indexFromMon(weekday)
+
+	isTomorrow := strings.Contains(strings.ToLower(update.Message.Text), "tomorrow")
+	if isTomorrow {
+		index++
+	}
+
+	if index < 6 {
+		return s.Locations[index]
+	} else {
+		var day string
+		if isTomorrow {
+			day = "tomorrow"
+		} else {
+			day = "today"
+		}
+
+		return fmt.Sprintf("No breakfast for you %s :)", day)
+	}
 }
 
 func Root(w http.ResponseWriter, r *http.Request) {
