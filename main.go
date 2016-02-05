@@ -95,10 +95,10 @@ func (s *Server) deriveMessage(update Update) string {
 
 	isTomorrow := strings.Contains(strings.ToLower(update.Message.Text), "tomorrow")
 	if isTomorrow {
-		index++
+		index = (index + 1) % 7
 	}
 
-	if index < 6 {
+	if index < len(s.Locations) {
 		return s.Locations[index]
 	} else {
 		var day string
