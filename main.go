@@ -98,7 +98,7 @@ func (s *Server) deriveMessage(update Update) string {
 		index++
 	}
 
-	if index < 6 {
+	if index < len(s.Locations) {
 		return s.Locations[index]
 	} else {
 		var day string
