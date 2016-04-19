@@ -63,8 +63,8 @@ type Server struct {
 	Loc       *time.Location
 }
 
-// HandleToday tells the breakfast location today
-func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
+// Handle decide what to do with the http request from telegram
+func (s *Server) Handle(w http.ResponseWriter, r *http.Request) {
 	var update Update
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		log.Panicf("Failed to unmarshal update: %v", err)
@@ -90,6 +90,27 @@ func (s *Server) HandleToday(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deriveMessage(update Update) string {
+	message := update.Message.Text
+
+	congruentReason := deriveCongruentReasonType(message)
+	if congruentReason != NotSure {
+		return nextCongruentReason(congruentReason)
+	}
+
+	if strings.HasPrefix(message, "/") && !validCommand(message) {
+		return nextCongruentReason(NotSure)
+	}
+
+	return s.deriveBreakfastMessage(update)
+}
+
+func validCommand(msg string) bool {
+	return strings.HasPrefix(msg, "/breakfast") ||
+		strings.HasPrefix(msg, "/today") ||
+		strings.HasPrefix(msg, "/tomorrow")
+}
+
+func (s *Server) deriveBreakfastMessage(update Update) string {
 	weekday := time.Now().In(s.Loc).Weekday()
 	index := indexFromMon(weekday)
 
@@ -129,7 +150,54 @@ func main() {
 	server := Server{token, locations, loc}
 
 	http.Handle("/", http.HandlerFunc(Root))
-	http.Handle("/"+token, http.HandlerFunc(server.HandleToday))
+	http.Handle("/"+token, http.HandlerFunc(server.Handle))
 	log.Println("Listening on", token)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+type congruentReasonType int
+
+const (
+	NotSure congruentReasonType = iota
+	SAS
+	SSS
+	ASA
+	AAS
+)
+
+func deriveCongruentReasonType(msg string) congruentReasonType {
+	s := strings.ToLower(msg)
+
+	switch {
+	case strings.Contains(s, "side angle side"):
+		return SAS
+	case strings.Contains(s, "side side side"):
+		return SSS
+	case strings.Contains(s, "angle side angle"):
+		return ASA
+	case strings.Contains(s, "angle angle side"):
+		return AAS
+	default:
+		return NotSure
+	}
+}
+
+func nextCongruentReason(reason congruentReasonType) string {
+	switch reason {
+	case SAS:
+		return congruentReasons[1]
+	case SSS:
+		return congruentReasons[2]
+	case ASA:
+		return congruentReasons[3]
+	default:
+		return congruentReasons[0]
+	}
+}
+
+var congruentReasons = []string{
+	"side ♩ angle ♫ side 𝅗𝅥",
+	"side ♩ side ♫ side 𝅗𝅥",
+	"angle ♩ side ♫ angle 𝅗𝅥",
+	"angle ♫ angle ♫ side 𝅗𝅥",
 }
