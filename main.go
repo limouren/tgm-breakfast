@@ -196,8 +196,8 @@ func nextCongruentReason(reason congruentReasonType) string {
 }
 
 var congruentReasons = []string{
-	"side ♩ angle ♫ side 𝅗𝅥",
-	"side ♩ side ♫ side 𝅗𝅥",
-	"angle ♩ side ♫ angle 𝅗𝅥",
-	"angle ♫ angle ♫ side 𝅗𝅥",
+	"side ♩ angle ♫ side ♩",
+	"side ♩ side ♫ side ♩",
+	"angle ♩ side ♫ angle ♩",
+	"angle ♫ angle ♫ side ♩",
 }
